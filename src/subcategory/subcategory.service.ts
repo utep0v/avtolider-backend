@@ -37,6 +37,13 @@ export class SubcategoryService {
     });
   }
 
+  async findByCategoryId(categoryId: string): Promise<Subcategory[]> {
+    return this.subcategoryRepository.find({
+      where: { category: { id: categoryId } },
+      relations: ['category'],
+    });
+  }
+
   async remove(id: string): Promise<void> {
     const result = await this.subcategoryRepository.delete(id);
     if (result.affected === 0) {

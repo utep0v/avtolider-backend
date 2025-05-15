@@ -6,6 +6,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './entity/product.entity';
 import { Subcategory } from '../subcategory/entity/subcategory.entity';
 import { Category } from '../category/entity/category.entity';
+import { FileEntity } from '../files/entity/file.entity';
 
 @Injectable()
 export class ProductService {
@@ -16,32 +17,46 @@ export class ProductService {
     private readonly categoryRepository: Repository<Category>,
     @InjectRepository(Subcategory)
     private readonly subcategoryRepository: Repository<Subcategory>,
+    @InjectRepository(FileEntity)
+    private readonly fileRepository: Repository<FileEntity>,
   ) {}
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
-    const { categoryId, subcategoryId, ...otherData } = createProductDto;
+    const { categoryId, subcategoryId, imageIds, ...otherData } =
+      createProductDto;
 
+    // Проверка категории
     const category = await this.categoryRepository.findOne({
       where: { id: categoryId },
     });
-
     if (!category) {
       throw new NotFoundException('Категория не найдена');
     }
 
+    // Проверка подкатегории
     const subcategory = await this.subcategoryRepository.findOne({
       where: { id: subcategoryId, category: { id: categoryId } },
       relations: ['category'],
     });
-
     if (!subcategory) {
       throw new NotFoundException('Подкатегория не найдена');
     }
 
+    // Получение файлов по массиву ID
+    const images = imageIds?.length
+      ? await this.fileRepository.findByIds(imageIds)
+      : [];
+
+    if (imageIds && images.length !== imageIds.length) {
+      throw new NotFoundException('Некоторые изображения не найдены');
+    }
+
+    // Создание продукта
     const product = this.productRepository.create({
       ...otherData,
       category,
       subcategory,
+      images,
     });
 
     return this.productRepository.save(product);
@@ -69,17 +84,19 @@ export class ProductService {
     id: string,
     updateProductDto: UpdateProductDto,
   ): Promise<Product | null> {
-    const { categoryId, subcategoryId, ...otherData } = updateProductDto;
+    const { categoryId, subcategoryId, imageIds, ...otherData } =
+      updateProductDto;
 
     const product = await this.productRepository.findOne({
       where: { id },
-      relations: ['category', 'subcategory'],
+      relations: ['category', 'subcategory', 'images'],
     });
 
     if (!product) {
       throw new NotFoundException('Продукт не найден');
     }
 
+    // Обновление категории, если указана
     if (categoryId) {
       const category = await this.categoryRepository.findOne({
         where: { id: categoryId },
@@ -92,6 +109,7 @@ export class ProductService {
       product.category = category;
     }
 
+    // Обновление подкатегории, если указана
     if (subcategoryId) {
       const subcategory = await this.subcategoryRepository.findOne({
         where: { id: subcategoryId },
@@ -104,6 +122,15 @@ export class ProductService {
       product.subcategory = subcategory;
     }
 
+    if (imageIds) {
+      const images = await this.fileRepository.findByIds(imageIds);
+      if (images.length !== imageIds.length) {
+        throw new NotFoundException('Некоторые изображения не найдены');
+      }
+      product.images = images;
+    }
+
+    // Обновление других данных продукта
     Object.assign(product, otherData);
 
     return this.productRepository.save(product);

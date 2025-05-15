@@ -4,9 +4,12 @@ import {
   Column,
   ManyToOne,
   CreateDateColumn,
+  OneToMany,
+  JoinTable,
 } from 'typeorm';
 import { Subcategory } from '../../subcategory/entity/subcategory.entity';
 import { Category } from '../../category/entity/category.entity';
+import { FileEntity } from '../../files/entity/file.entity';
 
 @Entity('products')
 export class Product {
@@ -22,8 +25,9 @@ export class Product {
   @Column()
   quantity: number;
 
-  @Column({ nullable: true })
-  imageId: string;
+  @OneToMany(() => FileEntity, (file) => file.product, { cascade: true })
+  @JoinTable()
+  images: FileEntity[];
 
   @ManyToOne(() => Category, (category) => category.products, {
     onDelete: 'CASCADE',

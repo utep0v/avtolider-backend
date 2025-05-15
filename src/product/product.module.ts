@@ -5,9 +5,12 @@ import { ProductController } from './product.controller';
 import { Product } from './entity/product.entity';
 import { Subcategory } from '../subcategory/entity/subcategory.entity';
 import { Category } from '../category/entity/category.entity';
+import { FileEntity } from '../files/entity/file.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Product, Subcategory, Category])],
+  imports: [
+    TypeOrmModule.forFeature([Product, Subcategory, Category, FileEntity]),
+  ],
   providers: [ProductService],
   controllers: [ProductController],
 })

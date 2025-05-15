@@ -22,6 +22,6 @@ export class UpdateProductDto {
   subcategoryId?: string;
 
   @IsOptional()
-  @IsUUID()
-  imageId?: string;
+  @IsUUID('all', { each: true })
+  imageIds?: string[];
 }

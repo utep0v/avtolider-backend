@@ -5,12 +5,13 @@ import {
   Delete,
   Param,
   UploadedFile,
+  UploadedFiles,
   UseInterceptors,
   Res,
   UseGuards,
 } from '@nestjs/common';
 import { FilesService } from './files.service';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import { join } from 'path';
@@ -36,8 +37,31 @@ export class FilesController {
     }),
   )
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
-    const savedFile = await this.filesService.saveFile(file.filename, file.path);
+    const savedFile = await this.filesService.saveFile(
+      file.filename,
+      file.path,
+    );
     return { id: savedFile.id };
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Post('upload/multiple')
+  @UseInterceptors(
+    FilesInterceptor('files', 10, {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, cb) => {
+          const filename = `${uuidv4()}-${file.originalname}`;
+          cb(null, filename);
+        },
+      }),
+    }),
+  )
+  async uploadMultipleFiles(@UploadedFiles() files: Express.Multer.File[]) {
+    const savedFiles = await Promise.all(
+      files.map((file) => this.filesService.saveFile(file.filename, file.path)),
+    );
+    return savedFiles.map((file) => ({ id: file.id }));
   }
 
   @Get(':id')

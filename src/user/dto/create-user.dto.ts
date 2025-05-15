@@ -26,6 +26,10 @@ export class CreateUserDto {
   @Length(5, 20)
   phoneNumber: string;
 
+  @IsString()
+  @IsNotEmpty()
+  role: string;
+
   @IsOptional()
   @IsString()
   city?: string;

@@ -1,4 +1,12 @@
-import { Controller, Post, Get, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
+} from '@nestjs/common';
 import { SubcategoryService } from './subcategory.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -23,6 +31,11 @@ export class SubcategoryController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.subcategoryService.findOne(id);
+  }
+
+  @Get('/category/:categoryId')
+  findByCategoryId(@Param('categoryId') categoryId: string) {
+    return this.subcategoryService.findByCategoryId(categoryId);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

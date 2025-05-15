@@ -28,6 +28,6 @@ export class CreateProductDto {
   subcategoryId: string;
 
   @IsOptional()
-  @IsUUID()
-  imageId?: string;
+  @IsUUID('all', { each: true })
+  imageIds?: string[];
 }
