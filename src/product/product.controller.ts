@@ -28,8 +28,20 @@ export class ProductController {
   }
 
   @Get()
-  findAll(@Query('page') page = 1, @Query('size') size = 10) {
-    return this.productService.findAll(+page, +size);
+  findAll(
+    @Query('page') page = 1,
+    @Query('size') size = 10,
+    @Query('search') search?: string,
+    @Query('categoryId') categoryId?: string,
+    @Query('subcategoryId') subcategoryId?: string,
+  ) {
+    return this.productService.findAll(
+      +page,
+      +size,
+      search,
+      categoryId,
+      subcategoryId,
+    );
   }
 
   @Get(':id')

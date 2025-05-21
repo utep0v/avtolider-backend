@@ -29,28 +29,44 @@ export class UserService {
     city?: string,
     role?: string,
   ): Promise<{ data: User[]; total: number }> {
-    const where: any = {};
+    const qb = this.userRepository.createQueryBuilder('user');
 
     if (search) {
-      where.firstName = ILike(`%${search}%`);
+      const searchTerms = search.trim().split(/\s+/);
+      if (searchTerms.length === 1) {
+        qb.andWhere(
+          '(LOWER(user.firstName) LIKE :search OR LOWER(user.lastName) LIKE :search)',
+          { search: `%${searchTerms[0].toLowerCase()}%` },
+        );
+      } else if (searchTerms.length >= 2) {
+        qb.andWhere(
+          `(LOWER(user.firstName) LIKE :first OR LOWER(user.lastName) LIKE :last OR (LOWER(user.firstName) = :firstExact AND LOWER(user.lastName) = :lastExact))`,
+          {
+            first: `%${searchTerms[0].toLowerCase()}%`,
+            last: `%${searchTerms[1].toLowerCase()}%`,
+            firstExact: searchTerms[0].toLowerCase(),
+            lastExact: searchTerms[1].toLowerCase(),
+          },
+        );
+      }
     }
 
     if (city) {
-      where.city = ILike(`%${city}%`);
+      qb.andWhere('LOWER(user.city) LIKE :city', {
+        city: `%${city.toLowerCase()}%`,
+      });
     }
 
     if (role) {
-      where.role = role;
+      qb.andWhere('user.role = :role', { role });
     }
 
-    const [users, total] = await this.userRepository.findAndCount({
-      where,
-      skip: (page - 1) * size,
-      take: size,
-      order: { createdAt: 'DESC' },
-    });
+    qb.orderBy('user.createdAt', 'DESC')
+      .skip((page - 1) * size)
+      .take(size);
 
-    return { data: users, total };
+    const [data, total] = await qb.getManyAndCount();
+    return { data, total };
   }
 
   async findOne(id: string): Promise<User> {

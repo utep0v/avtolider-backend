@@ -10,6 +10,8 @@ import { CategoryModule } from './category/category.module';
 import { SubcategoryModule } from './subcategory/subcategory.module';
 import { FilesModule } from './files/files.module';
 import { ProductModule } from './product/product.module';
+import { OrderModule } from './order/order.module';
+import { CartModule } from './cart/cart.module';
 
 @Module({
   imports: [
@@ -33,7 +35,9 @@ import { ProductModule } from './product/product.module';
     UserModule,
     AuthModule,
     MailModule,
+    CartModule,
     FilesModule,
+    OrderModule,
     ProductModule,
     CategoryModule,
     SubcategoryModule,
