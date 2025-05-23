@@ -8,7 +8,12 @@ async function bootstrap() {
   const port = configService.get<number>('PORT') || 3001;
 
   app.enableCors({
-    origin: 'http://localhost:4200',
+    origin: [
+      'http://localhost:4200',
+      'https://avtolider.kz',
+      'https://www.avtolider.kz',
+      'https://91.243.71.238',
+    ],
     credentials: true,
   });
 

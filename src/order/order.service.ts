@@ -56,19 +56,76 @@ export class OrderService {
     return this.orderRepository.save(order);
   }
 
-  async findAll(): Promise<Order[]> {
-    return this.orderRepository.find({
-      order: { createdAt: 'DESC' },
-      relations: ['user', 'items', 'items.product'],
-    });
+  async findAll(
+    page = 1,
+    size = 10,
+    search?: string,
+    city?: string,
+    categoryId?: string,
+    subcategoryId?: string,
+  ): Promise<{ data: Order[]; total: number }> {
+    const query = this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.user', 'user')
+      .leftJoinAndSelect('order.items', 'orderItem')
+      .leftJoinAndSelect('orderItem.product', 'product')
+      .leftJoinAndSelect('product.category', 'category')
+      .leftJoinAndSelect('product.subcategory', 'subcategory')
+      .orderBy('order.createdAt', 'DESC')
+      .skip((page - 1) * size)
+      .take(size);
+
+    if (search) {
+      query.andWhere(
+        "LOWER(CONCAT(user.firstName, ' ', user.lastName)) LIKE :search",
+        { search: `%${search.toLowerCase()}%` },
+      );
+    }
+
+    if (city) {
+      query.andWhere('LOWER(user.city) LIKE :city', {
+        city: `%${city.toLowerCase()}%`,
+      });
+    }
+
+    if (categoryId) {
+      query.andWhere('product.category = :categoryId', { categoryId });
+    }
+
+    if (subcategoryId) {
+      query.andWhere('product.subcategory = :subcategoryId', { subcategoryId });
+    }
+
+    const [data, total] = await query.getManyAndCount();
+
+    return { data, total };
   }
 
-  async findOne(id: string): Promise<Order> {
+  async findOne(id: string): Promise<any> {
     const order = await this.orderRepository.findOne({
       where: { id },
-      relations: ['user', 'items', 'items.product'],
+      relations: [
+        'user',
+        'items',
+        'items.product',
+        'items.product.category',
+        'items.product.subcategory',
+        'items.product.images',
+      ],
     });
     if (!order) throw new NotFoundException('Заказ не найден');
-    return order;
+
+    const total = order.items.reduce((sum, item) => {
+      const price =
+        typeof item.product.price === 'string'
+          ? parseFloat(item.product.price)
+          : item.product.price;
+      return sum + price * item.quantity;
+    }, 0);
+
+    return {
+      ...order,
+      total,
+    };
   }
 }

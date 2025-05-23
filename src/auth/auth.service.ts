@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
@@ -41,11 +45,22 @@ export class AuthService {
     };
   }
 
-  async activateAccount(token: string, password: string) {
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password, salt);
-    const user = await this.usersService.activateUser(token, passwordHash);
+  async activateAccount(
+    token: string,
+    password: string,
+  ): Promise<{ message: string }> {
+    const user = await this.usersService.findByActivationToken(token);
 
+    if (!user) {
+      throw new NotFoundException('Неверный или истекший токен активации');
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(password, salt);
+
+    user.isActive = true;
+    user.activationToken = '';
+    await this.usersService.save(user);
     return { message: 'Аккаунт успешно активирован!' };
   }
 
@@ -60,7 +75,7 @@ export class AuthService {
       throw new UnauthorizedException('Неверные учетные данные');
     }
 
-    const payload = { sub: user.id, email: user.email };
+    const payload = { sub: user.id, email: user.email, role: user.role };
 
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: this.configService.get<string>('JWT_SECRET'),
@@ -94,7 +109,7 @@ export class AuthService {
       }
 
       const newAccessToken = await this.jwtService.signAsync(
-        { sub: user.id, email: user.email },
+        { sub: user.id, email: user.email, role: user.role },
         {
           secret: this.configService.get<string>('JWT_SECRET'),
           expiresIn: this.configService.get<string>('JWT_EXPIRES_IN'),
@@ -123,23 +138,56 @@ export class AuthService {
 
     const activationLink = `${this.configService.get<string>(
       'FRONTEND_URL',
-    )}/activate/${user.activationToken}`;
+    )}/verify-password/${user.activationToken}`;
 
-    await this.mailService.sendActivationEmail(user.email, activationLink, user.firstName);
+    await this.mailService.sendActivationEmail(
+      user.email,
+      activationLink,
+      user.firstName,
+    );
 
     return {
       message: 'Ссылка активации отправлена повторно.',
     };
   }
 
-  async getMe(userId: string) {
-    const user = await this.usersService.findOne(userId);
-
+  async forgotPassword(email: string) {
+    const user = await this.usersService.findByEmail(email);
     if (!user) {
-      throw new UnauthorizedException('Пользователь не найден');
+      return { message: 'Письмо отправлено (если такой email существует).' };
     }
 
-    const { password, refreshToken, ...safeUser } = user;
-    return safeUser;
+    const resetToken = this.jwtService.sign(
+      { userId: user.id },
+      { secret: process.env.RESET_PASSWORD_SECRET, expiresIn: '15m' },
+    );
+
+    const resetLink = `${this.configService.get<string>('FRONTEND_URL')}/auth/reset-password/${resetToken}`;
+
+    await this.mailService.sendResetPasswordEmail(
+      user.email,
+      resetLink,
+      user.firstName,
+    );
+
+    return { message: 'Письмо отправлено (если такой email существует).' };
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    let payload;
+    try {
+      payload = this.jwtService.verify(token, { secret: process.env.RESET_PASSWORD_SECRET });
+    } catch (e) {
+      throw new UnauthorizedException('Ссылка устарела или неверна');
+    }
+    const user = await this.usersService.findOne(payload.userId);
+
+    if (!user) throw new UnauthorizedException('Пользователь не найден');
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    await this.usersService.save(user);
+
+    return { message: 'Пароль успешно изменен!' };
   }
 }

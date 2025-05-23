@@ -27,6 +27,8 @@ export class UserController {
     return this.usersService.create(createUserDto);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @Get()
   findAll(
     @Query('page') page = 1,

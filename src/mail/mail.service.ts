@@ -20,4 +20,20 @@ export class MailService {
       },
     });
   }
+
+  async sendResetPasswordEmail(
+    to: string,
+    resetLink: string,
+    firstName?: string,
+  ) {
+    await this.mailerService.sendMail({
+      to,
+      subject: 'Восстановление пароля',
+      html: `
+      <p>Здравствуйте${firstName ? ', ' + firstName : ''}!</p>
+      <p>Для сброса пароля перейдите по <a href="${resetLink}">этой ссылке</a>.</p>
+      <p>Если вы не запрашивали сброс, проигнорируйте это письмо.</p>
+    `,
+    });
+  }
 }
