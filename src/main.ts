@@ -12,7 +12,7 @@ async function bootstrap() {
       'http://localhost:4200',
       'https://avtolider.kz',
       'https://www.avtolider.kz',
-      'https://91.243.71.238',
+      'http://91.243.71.238:3000',
     ],
     credentials: true,
   });
