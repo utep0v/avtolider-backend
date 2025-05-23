@@ -13,6 +13,7 @@ async function bootstrap() {
       'https://avtolider.kz',
       'https://www.avtolider.kz',
       'http://91.243.71.238:3000',
+      'https://91.243.71.238:3000',
     ],
     credentials: true,
   });
