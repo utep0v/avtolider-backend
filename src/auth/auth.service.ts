@@ -31,7 +31,7 @@ export class AuthService {
 
     const activationLink = `${this.configService.get<string>(
       'FRONTEND_URL',
-    )}/activate/${activationToken}`;
+    )}/verify-email/${activationToken}`;
 
     await this.mailService.sendActivationEmail(
       user.email,
@@ -73,6 +73,10 @@ export class AuthService {
       !(await bcrypt.compare(loginDto.password, user.password))
     ) {
       throw new UnauthorizedException('Неверные учетные данные');
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedException('Аккаунт не активирован');
     }
 
     const payload = { sub: user.id, email: user.email, role: user.role };
