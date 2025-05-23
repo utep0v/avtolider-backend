@@ -64,12 +64,13 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async getProfile(@Request() req) {
-    console.log('req.user', req.user);
+    console.log('GET PROFILE REQ.USER:', req.user);
     const user = await this.userService.findOne(req.user.userId);
 
     if (!user) {
       throw new Error('Пользователь не найден.');
     }
+    console.log('FOUND USER BY ID:', user);
 
     return {
       id: user.id,
