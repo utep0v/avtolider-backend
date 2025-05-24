@@ -31,7 +31,7 @@ export class AuthService {
 
     const activationLink = `${this.configService.get<string>(
       'FRONTEND_URL',
-    )}/verify-email/${activationToken}`;
+    )}/auth/verify-email/${activationToken}`;
 
     await this.mailService.sendActivationEmail(
       user.email,
@@ -142,7 +142,7 @@ export class AuthService {
 
     const activationLink = `${this.configService.get<string>(
       'FRONTEND_URL',
-    )}/verify-password/${user.activationToken}`;
+    )}/auth/verify-email/${user.activationToken}`;
 
     await this.mailService.sendActivationEmail(
       user.email,
