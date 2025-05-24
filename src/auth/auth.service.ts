@@ -66,7 +66,6 @@ export class AuthService {
 
   async login(loginDto: LoginDto) {
     const user = await this.usersService.findByEmail(loginDto.email);
-    console.log('LOGIN USER:', user);
 
     if (
       !user ||
@@ -81,7 +80,6 @@ export class AuthService {
     }
 
     const payload = { sub: user.id, email: user.email, role: user.role };
-    console.log('LOGIN PAYLOAD:', payload);
 
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: this.configService.get<string>('JWT_SECRET'),

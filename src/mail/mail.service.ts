@@ -10,6 +10,7 @@ export class MailService {
     activationLink: string,
     firstName: string,
   ) {
+    console.log(activationLink);
     await this.mailerService.sendMail({
       to: email,
       subject: 'Активация аккаунта',
