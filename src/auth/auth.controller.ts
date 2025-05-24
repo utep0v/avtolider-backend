@@ -14,6 +14,8 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { UserService } from '../user/user.service';
 import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './decorators/roles.decorator';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -44,6 +46,16 @@ export class AuthController {
     return this.authService.refreshTokens(refreshToken);
   }
 
+  @Post('forgot-password')
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto.email);
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto.token, dto.newPassword);
+  }
+
   @Post('resend-activation/:email')
   resendActivationEmail(@Param('email') email: string) {
     return this.authService.resendActivationEmail(email);
@@ -52,16 +64,18 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async getProfile(@Request() req) {
-    const user = await this.userService.findOne(req.user.sub);
+    console.log('GET PROFILE REQ.USER:', req.user);
+    const user = await this.userService.findOne(req.user.userId);
 
     if (!user) {
       throw new Error('Пользователь не найден.');
     }
+    console.log('FOUND USER BY ID:', user);
 
     return {
       id: user.id,
-      firstName: `${user.firstName}`,
-      lastName: `${user.lastName}`,
+      firstName: user.firstName,
+      lastName: user.lastName,
       email: user.email,
       role: user.role,
     };

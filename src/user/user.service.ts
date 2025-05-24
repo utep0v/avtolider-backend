@@ -71,8 +71,13 @@ export class UserService {
 
   async findOne(id: string): Promise<User> {
     const user = await this.userRepository.findOne({ where: { id } });
+
     if (!user) throw new NotFoundException('Пользователь не найден');
     return user;
+  }
+
+  async findByActivationToken(token: string): Promise<User | null> {
+    return this.userRepository.findOne({ where: { activationToken: token } });
   }
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User | null> {
@@ -95,6 +100,7 @@ export class UserService {
         'isActive',
         'firstName',
         'lastName',
+        'activationToken',
       ],
     });
   }
