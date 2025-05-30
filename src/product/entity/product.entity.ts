@@ -25,6 +25,9 @@ export class Product {
   @Column()
   quantity: number;
 
+  @Column({ nullable: true })
+  code: string;
+
   @OneToMany(() => FileEntity, (file) => file.product, { cascade: true })
   @JoinTable()
   images: FileEntity[];

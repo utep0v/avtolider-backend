@@ -28,7 +28,7 @@ export class CreateOrderDto {
 
   @IsString()
   @IsOptional()
-  type?: string;
+  type: 'qr' | 'bank';
 
   @IsString()
   @IsOptional()

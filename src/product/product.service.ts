@@ -65,6 +65,7 @@ export class ProductService {
     search?: string,
     categoryId?: string,
     subcategoryId?: string,
+    isAdmin = false,
   ): Promise<{ data: Product[]; total: number }> {
     const query = this.productRepository
       .createQueryBuilder('product')
@@ -75,10 +76,15 @@ export class ProductService {
       .skip((page - 1) * size)
       .take(size);
 
+    if (!isAdmin) {
+      query.where('product.quantity > 0');
+    }
+
     if (search) {
-      query.andWhere('LOWER(product.name) LIKE :search', {
-        search: `%${search.toLowerCase()}%`,
-      });
+      query.andWhere(
+        '(LOWER(product.name) LIKE :search OR LOWER(product.code) LIKE :search)',
+        { search: `%${search.toLowerCase()}%` },
+      );
     }
 
     if (categoryId) {
@@ -104,6 +110,7 @@ export class ProductService {
     return {
       id: product.id,
       name: product.name,
+      code: product.code,
       price: product.price,
       quantity: product.quantity,
       category: product.category,

@@ -10,6 +10,7 @@ import { OrderItem } from './entity/order-item.entity';
 import { Product } from '../product/entity/product.entity';
 import { User } from '../user/entity/user.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class OrderService {
@@ -22,6 +23,7 @@ export class OrderService {
     private readonly productRepository: Repository<Product>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly mailService: MailService,
   ) {}
 
   async create(userId: string, dto: CreateOrderDto): Promise<Order> {
@@ -51,9 +53,25 @@ export class OrderService {
     const order = this.orderRepository.create({
       user,
       items,
+      phoneNumber: dto.phoneNumber,
+      type: dto.type,
     });
 
-    return this.orderRepository.save(order);
+    const savedOrder = await this.orderRepository.save(order);
+
+    if (dto.type === 'bank') {
+      await this.mailService.sendMail({
+        to: 'sermanov01@gmail.com',
+        subject: 'Новый заказ',
+        html: `
+      <h2>Новый заказ</h2>
+      <p><strong>Клиент:</strong> ${user.firstName} ${user.lastName}</p>
+      <p><strong>Номер телефона:</strong> ${dto.phoneNumber}</p>
+    `,
+      });
+    }
+
+    return savedOrder;
   }
 
   async findAll(

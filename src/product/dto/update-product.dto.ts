@@ -1,9 +1,19 @@
-import { IsOptional, IsString, IsUUID, IsNumber } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsUUID,
+  IsNumber,
+  IsNotEmpty,
+} from 'class-validator';
 
 export class UpdateProductDto {
   @IsOptional()
   @IsString()
   name?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  code?: string;
 
   @IsOptional()
   @IsNumber()

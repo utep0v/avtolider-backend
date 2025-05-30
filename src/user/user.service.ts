@@ -1,9 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { User } from './entity/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
-import { v4 as uuidv4 } from 'uuid';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
@@ -14,11 +13,7 @@ export class UserService {
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const activationToken = uuidv4();
-    const user = this.userRepository.create({
-      ...createUserDto,
-      activationToken,
-    });
+    const user = this.userRepository.create(createUserDto);
     return this.userRepository.save(user);
   }
 
@@ -103,22 +98,6 @@ export class UserService {
         'activationToken',
       ],
     });
-  }
-
-  async activateUser(token: string, passwordHash: string): Promise<User> {
-    const user = await this.userRepository.findOne({
-      where: { activationToken: token },
-    });
-
-    if (!user) {
-      throw new NotFoundException('Неверный или истекший токен активации');
-    }
-
-    user.password = passwordHash;
-    user.activationToken = '';
-    user.isActive = true;
-
-    return this.userRepository.save(user);
   }
 
   async remove(id: string): Promise<{ message: string }> {

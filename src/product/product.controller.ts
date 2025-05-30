@@ -34,6 +34,7 @@ export class ProductController {
     @Query('search') search?: string,
     @Query('categoryId') categoryId?: string,
     @Query('subcategoryId') subcategoryId?: string,
+    @Query('isAdmin') isAdmin?: string,
   ) {
     return this.productService.findAll(
       +page,
@@ -41,6 +42,7 @@ export class ProductController {
       search,
       categoryId,
       subcategoryId,
+      isAdmin === 'true',
     );
   }
 
