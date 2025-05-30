@@ -61,7 +61,7 @@ export class OrderService {
 
     if (dto.type === 'bank') {
       await this.mailService.sendMail({
-        to: 'sermanov01@gmail.com',
+        to: 'sultanalimzhanov2000@gmail.com',
         subject: 'Новый заказ',
         html: `
       <h2>Новый заказ</h2>
