@@ -34,4 +34,19 @@ export class CreateProductDto {
   @IsOptional()
   @IsUUID('all', { each: true })
   imageIds?: string[];
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  metaTitle?: string;
+
+  @IsOptional()
+  @IsString()
+  metaDescription?: string;
+
+  @IsOptional()
+  isPublished?: boolean;
 }
