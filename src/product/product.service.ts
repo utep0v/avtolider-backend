@@ -83,15 +83,7 @@ export class ProductService {
   }
 
   private ensureSeoFields(p: Product) {
-    if (!p.description?.trim())
-      p.description = this.buildAutoDescription(
-        p.name,
-        p.category,
-        p.subcategory,
-      );
-    if (!p.metaTitle?.trim()) p.metaTitle = this.buildMetaTitle(p.name);
-    if (!p.metaDescription?.trim())
-      p.metaDescription = this.buildMetaDescription(p.name, Number(p.price));
+
   }
 
   // ─── CRUD ────────────────────────────────────────────────────────────────
